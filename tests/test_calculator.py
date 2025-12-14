@@ -370,14 +370,16 @@ class TestDivision:
         assert result == pytest.approx(expected)
 
     def test_divide_by_zero_raises_value_error(self, calc):
-        """Test dividing by zero raises ValueError."""
+        """Test dividing by zero raises ValueError with correct message."""
         # Arrange
         a = 5
         b = 0
 
         # Act / Assert
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as excinfo:
             calc.divide(a, b)
+
+        assert str(excinfo.value) == "Cannot divide by zero"
 
 
 class TestInputRange:
@@ -428,3 +430,13 @@ class TestInputRange:
         operation = getattr(calc, method)
         with pytest.raises(InvalidInputException):
             operation(*args)
+
+    def test_invalid_input_exception_message_includes_value(self, calc):
+        """Raised InvalidInputException should include offending value and range."""
+        with pytest.raises(InvalidInputException) as excinfo:
+            calc.add(OUT_OF_RANGE_HIGH, 0)
+
+        expected_message = (
+            f"Input {OUT_OF_RANGE_HIGH} outside of range [{MIN_INPUT}, {MAX_INPUT}]"
+        )
+        assert str(excinfo.value) == expected_message
