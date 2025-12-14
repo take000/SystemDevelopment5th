@@ -5,6 +5,11 @@ Test suite for the Calculator class.
 import pytest
 from calculator.calculator import Calculator, InvalidInputException
 
+MAX_INPUT = Calculator.MAX_VALUE
+MIN_INPUT = Calculator.MIN_VALUE
+OUT_OF_RANGE_HIGH = MAX_INPUT + 1
+OUT_OF_RANGE_LOW = MIN_INPUT - 1
+
 
 @pytest.fixture
 def calc():
@@ -373,3 +378,53 @@ class TestDivision:
         # Act / Assert
         with pytest.raises(ValueError):
             calc.divide(a, b)
+
+
+class TestInputRange:
+    """Input range validation tests."""
+
+    @pytest.mark.parametrize(
+        "method,args,expected",
+        [
+            ("add", (MAX_INPUT, 0), MAX_INPUT),
+            ("add", (MIN_INPUT, 0), MIN_INPUT),
+            ("subtract", (MAX_INPUT, 0), MAX_INPUT),
+            ("subtract", (MIN_INPUT, 0), MIN_INPUT),
+            ("multiply", (MAX_INPUT, 1), MAX_INPUT),
+            ("multiply", (MIN_INPUT, 1), MIN_INPUT),
+            ("divide", (MAX_INPUT, 1), MAX_INPUT),
+            ("divide", (MIN_INPUT, 1), MIN_INPUT),
+        ],
+    )
+    def test_operations_accept_boundary_values(self, calc, method, args, expected):
+        """Ensure methods allow values on the boundary."""
+        operation = getattr(calc, method)
+        result = operation(*args)
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        "method,args",
+        [
+            ("add", (OUT_OF_RANGE_HIGH, 0)),
+            ("add", (0, OUT_OF_RANGE_HIGH)),
+            ("add", (OUT_OF_RANGE_LOW, 0)),
+            ("add", (0, OUT_OF_RANGE_LOW)),
+            ("subtract", (OUT_OF_RANGE_HIGH, 0)),
+            ("subtract", (0, OUT_OF_RANGE_HIGH)),
+            ("subtract", (OUT_OF_RANGE_LOW, 0)),
+            ("subtract", (0, OUT_OF_RANGE_LOW)),
+            ("multiply", (OUT_OF_RANGE_HIGH, 1)),
+            ("multiply", (1, OUT_OF_RANGE_HIGH)),
+            ("multiply", (OUT_OF_RANGE_LOW, 1)),
+            ("multiply", (1, OUT_OF_RANGE_LOW)),
+            ("divide", (OUT_OF_RANGE_HIGH, 1)),
+            ("divide", (1, OUT_OF_RANGE_HIGH)),
+            ("divide", (OUT_OF_RANGE_LOW, 1)),
+            ("divide", (1, OUT_OF_RANGE_LOW)),
+        ],
+    )
+    def test_operations_raise_for_inputs_outside_range(self, calc, method, args):
+        """Inputs beyond the allowed range should raise InvalidInputException."""
+        operation = getattr(calc, method)
+        with pytest.raises(InvalidInputException):
+            operation(*args)
